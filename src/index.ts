@@ -3011,8 +3011,10 @@ export async function processAuthorizationCodeOAuth2Response(
 }
 
 function checkJwtType(expected: string, result: Awaited<ReturnType<typeof validateJwt>>) {
-  if (typeof result.header.typ !== 'string' || normalizeTyp(result.header.typ) !== expected) {
-    throw new OPE('unexpected JWT "typ" header parameter value')
+  if (typeof result.header.typ !== undefined) {
+    if(typeof result.header.typ !== 'string' || normalizeTyp(result.header.typ) !== expected) {
+      throw new OPE('unexpected JWT "typ" header parameter value')
+    }
   }
 
   return result

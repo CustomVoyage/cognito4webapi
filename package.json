@@ -1,6 +1,6 @@
 {
   "name": "cognito4webapi",
-  "version": "2.10.4",
+  "version": "2.10.5",
   "description": "OAuth 2 / OpenID Connect (allowing for Cognito idiosyncrasies) for JavaScript Runtimes",
   "keywords": [
     "access token",
