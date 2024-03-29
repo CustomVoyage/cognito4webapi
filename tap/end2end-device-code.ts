@@ -105,8 +105,9 @@ export default (QUnit: QUnit) => {
               const url = new URL(<string>params[0])
               const { headers, method } = params[1]!
               const request = new Request(url, { headers, method })
-
-              const jwtAccessToken = await lib.validateJwtAccessToken(as, request, resource)
+              const authHeader = request.headers.get('authorization') || ''
+              const scheme = authHeader.split(' ')[0]
+              const jwtAccessToken = await lib.validateJwtAccessToken(as, scheme, authHeader, request.method, request.url, resource)
 
               t.propContains(jwtAccessToken, {
                 client_id: client.client_id,
