@@ -2593,7 +2593,7 @@ async function processGenericAccessTokenResponse(
         getClockSkew(client),
         getClockTolerance(client),
       )
-        .then(validatePresence.bind(undefined, ['aud', 'exp', 'iat', 'iss', 'sub']))
+        .then(validatePresence.bind(undefined, ['exp', 'iat', 'iss', 'sub']))
         .then(validateIssuer.bind(undefined, as.issuer))
         .then(validateAudience.bind(undefined, client.client_id))
 
@@ -3303,7 +3303,7 @@ export async function processIntrospectionResponse(
       getClockTolerance(client),
     )
       .then(checkJwtType.bind(undefined, 'token-introspection+jwt'))
-      .then(validatePresence.bind(undefined, ['aud', 'iat', 'iss']))
+      .then(validatePresence.bind(undefined, ['iat', 'iss']))
       .then(validateIssuer.bind(undefined, as.issuer))
       .then(validateAudience.bind(undefined, client.client_id))
 
@@ -3623,7 +3623,7 @@ export async function validateJwtAuthResponse(
     getClockSkew(client),
     getClockTolerance(client),
   )
-    .then(validatePresence.bind(undefined, ['aud', 'exp', 'iss']))
+    .then(validatePresence.bind(undefined, ['exp', 'iss']))
     .then(validateIssuer.bind(undefined, as.issuer))
     .then(validateAudience.bind(undefined, client.client_id))
 
@@ -3764,7 +3764,6 @@ export async function validateDetachedSignatureResponse(
   }
 
   const requiredClaims: (keyof typeof jwtClaimNames)[] = [
-    'aud',
     'exp',
     'iat',
     'iss',
@@ -4495,7 +4494,6 @@ export async function validateJwtAccessToken(
   const requiredClaims: (keyof typeof jwtClaimNames)[] = [
     'iss',
     'exp',
-    'aud',
     'sub',
     'iat',
     'jti',
