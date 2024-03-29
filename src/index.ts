@@ -4315,21 +4315,12 @@ function normalizeHtu(htu: string) {
 
 async function validateDPoP(
   as: AuthorizationServer,
-  request: Request,
+  requestMethod: string,
+  requestUrl: string,
   accessToken: string,
   accessTokenClaims: JWTPayload,
   options?: ValidateJWTAccessTokenOptions,
 ) {
-  const header = request.headers.get('dpop')
-  if (header === null) {
-    throw new OPE('operation indicated DPoP use but the request has no DPoP HTTP Header')
-  }
-
-  if (request.headers.get('authorization')?.toLowerCase().startsWith('dpop ') === false) {
-    throw new OPE(
-      `operation indicated DPoP use but the request's Authorization HTTP Header scheme is not DPoP`,
-    )
-  }
 
   if (typeof accessTokenClaims.cnf?.jkt !== 'string') {
     throw new OPE(
@@ -4339,7 +4330,7 @@ async function validateDPoP(
 
   const clockSkew = getClockSkew(options)
   const proof = await validateJwt(
-    header,
+    accessToken,
     checkSigningAlgorithm.bind(
       undefined,
       undefined,
@@ -4367,13 +4358,13 @@ async function validateDPoP(
     throw new OPE('DPoP Proof iat is not recent enough')
   }
 
-  if (proof.claims.htm !== request.method) {
+  if (proof.claims.htm !== requestMethod) {
     throw new OPE('DPoP Proof htm mismatch')
   }
 
   if (
     typeof proof.claims.htu !== 'string' ||
-    normalizeHtu(proof.claims.htu) !== normalizeHtu(request.url)
+    normalizeHtu(proof.claims.htu) !== normalizeHtu(requestUrl)
   ) {
     throw new OPE('DPoP Proof htu mismatch')
   }
@@ -4447,7 +4438,10 @@ async function validateDPoP(
  * function's execution.
  *
  * @param as Authorization Server to accept JWT Access Tokens from.
- * @param request
+ * @param scheme Bearer or DPOP
+ * @param accessToken
+ * @param requestMethod
+ * @param requestUrl
  * @param expectedAudience Audience identifier the resource server expects for itself.
  * @param options
  *
@@ -4459,36 +4453,17 @@ async function validateDPoP(
  */
 export async function validateJwtAccessToken(
   as: AuthorizationServer,
-  request: Request,
+  scheme: string,
+  accessToken: string,
+  requestMethod: string,
+  requestUrl: string,
   expectedAudience: string,
   options?: ValidateJWTAccessTokenOptions,
 ): Promise<JWTAccessTokenClaims> {
   assertAs(as)
 
-  if (!looseInstanceOf(request, Request)) {
-    throw new TypeError('"request" must be an instance of Request')
-  }
-
   if (!validateString(expectedAudience)) {
     throw new OPE('"expectedAudience" must be a non-empty string')
-  }
-
-  const authorization = request.headers.get('authorization')
-  if (authorization === null) {
-    throw new OPE('"request" is missing an Authorization HTTP Header')
-  }
-  let { 0: scheme, 1: accessToken, length } = authorization.split(' ')
-  scheme = scheme.toLowerCase()
-  switch (scheme) {
-    case 'dpop':
-    case 'bearer':
-      break
-    default:
-      throw new UnsupportedOperationError('unsupported Authorization HTTP Header scheme')
-  }
-
-  if (length !== 2) {
-    throw new OPE('invalid Authorization HTTP Header format')
   }
 
   const requiredClaims: (keyof typeof jwtClaimNames)[] = [
@@ -4500,7 +4475,7 @@ export async function validateJwtAccessToken(
     'client_id',
   ]
 
-  if (options?.requireDPoP || scheme === 'dpop' || request.headers.has('dpop')) {
+  if (options?.requireDPoP || scheme === 'dpop') {
     requiredClaims.push('cnf')
   }
 
@@ -4543,10 +4518,9 @@ export async function validateJwtAccessToken(
   if (
     options?.requireDPoP ||
     scheme === 'dpop' ||
-    claims.cnf?.jkt !== undefined ||
-    request.headers.has('dpop')
+    claims.cnf?.jkt !== undefined
   ) {
-    await validateDPoP(as, request, accessToken, claims, options)
+    await validateDPoP(as, accessToken, requestMethod, requestUrl, claims, options)
   }
 
   return <JWTAccessTokenClaims>claims
