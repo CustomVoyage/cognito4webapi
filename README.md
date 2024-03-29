@@ -1,4 +1,17 @@
-# OAuth 2 / OpenID Connect for JavaScript Runtimes
+# OAuth 2 / OpenID Connect (allowing for Cognito idiosyncrasies) for JavaScript Runtimes
+
+## Notes on this fork
+This fork takes [Filip Skokan](https://github.com/panva)s spec compliant library and breaks it to accommodate Cognito:
+* Cognito doesn't include an 'aud' claim in its access tokens so this fork doesn't error when it's missing
+  * Please upvote [this report](https://repost.aws/questions/QU4wv0qKIMSk2O64Wk5P4jdg/why-do-cognito-access-tokens-not-have-an-audience-claim) to get this issue fixed and remove the need for this fork
+* Cognito doesn't include the 'typ' header parameter in its access tokens so this fork doesn't error when it's missing
+  * Please upvote [this report](https://repost.aws/questions/QUdDANuP-mSLaNNwpQevEsyQ/cognito-oauth-access-token-missing-typ-header-parameter) to get this issue fixed and remove the need for this fork
+
+In addition, this fork generalizes the validateJwtAccessToken() to accommodate scenarios where it is not possible to receive the token in the Authentication header (e.g. server rendered pages that don't involve client->server API calls) 
+
+Now onto the original readme...
+
+---
 
 This software provides a collection of routines that can be used to build client modules for OAuth 2.1, OAuth 2.0 with the latest Security Best Current Practices (BCP), and FAPI 2.0, as well as OpenID Connect where applicable. The primary goal of this software is to promote secure and up-to-date best practices while using only the capabilities common to both browser and non-browser JavaScript runtimes.
 
